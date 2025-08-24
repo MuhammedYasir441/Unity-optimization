@@ -1,14 +1,14 @@
 using UnityEngine;
-using UnityEngine.Rendering; // ShadowCastingMode için gerekli
+using UnityEngine.Rendering;
 using System.Collections.Generic;
 
 public class Occlusion : MonoBehaviour
 {
     [Header("Ayarlar")]
     public Camera cam;
-    public LayerMask occlusionMask = ~0; // Hangi layer’lar engelleyici olsun
-    public float checkInterval = 0.2f;   // Kontrol aralýðý
-    public int maxRaycastHits = 4;       // RaycastNonAlloc buffer boyutu
+    public LayerMask occlusionMask = ~0;
+    public float checkInterval = 0.2f;
+    public int maxRaycastHits = 4;
 
     private List<Renderer> allRenderers = new List<Renderer>();
     private float timer;
@@ -32,12 +32,11 @@ public class Occlusion : MonoBehaviour
         if (cam == null)
             cam = Camera.main;
 
-        // Sahnedeki tüm Renderer’larý al
         Renderer[] renderers = FindObjectsByType<Renderer>(FindObjectsSortMode.None);
         foreach (Renderer rend in renderers)
         {
             if (!rend.CompareTag("RenderAlways"))
-                rend.enabled = false; // Baþlangýçta tamamen görünmez
+                rend.enabled = false;
             allRenderers.Add(rend);
         }
 
@@ -58,7 +57,6 @@ public class Occlusion : MonoBehaviour
         {
             if (rend == null) continue;
 
-            // Her zaman renderlenecek objeler
             if (rend.CompareTag("RenderAlways"))
             {
                 rend.enabled = true;
@@ -68,14 +66,12 @@ public class Occlusion : MonoBehaviour
 
             Vector3 dir = rend.bounds.center - camPos;
 
-            // Kamera arkasýndaki objeler
             if (Vector3.Dot(camForward, dir) < 0)
             {
                 SetShadowsOnly(rend);
                 continue;
             }
 
-            // Frustum testi
             if (!GeometryUtility.TestPlanesAABB(planes, rend.bounds))
             {
                 SetShadowsOnly(rend);
@@ -84,7 +80,6 @@ public class Occlusion : MonoBehaviour
 
             float dist = dir.magnitude;
 
-            // Raycast ile engelleyici kontrol
             int hitCount = Physics.RaycastNonAlloc(camPos, dir.normalized, rayHits, dist, occlusionMask, QueryTriggerInteraction.Ignore);
 
             bool visible = true;
@@ -115,17 +110,16 @@ public class Occlusion : MonoBehaviour
 
     private void SetShadowsOnly(Renderer rend)
     {
-        rend.enabled = true; // Renderer açýk, ama sadece gölge býrakacak
+        rend.enabled = true;
         rend.shadowCastingMode = ShadowCastingMode.ShadowsOnly;
     }
 
-    // Yeni spawn objeleri eklemek için kullan
     public void RegisterNewRenderer(Renderer rend)
     {
         if (rend == null || allRenderers.Contains(rend))
             return;
 
-        // Baþlangýçta tamamen görünmez
+        // BaÃ¾langÃ½Ã§ta tamamen gÃ¶rÃ¼nmez
         if (!rend.CompareTag("RenderAlways"))
             rend.enabled = false;
 
